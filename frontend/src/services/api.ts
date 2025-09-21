@@ -1,7 +1,7 @@
 // src/services/api.ts
 import { TimeSlot, CreateSlotData, UpdateSlotData } from '../types';
 
-const API_BASE_URL = 'http://localhost:4000/slots';
+const API_BASE_URL = 'https://scheduler-app-s0zn.onrender.com/';
 
 // Convert frontend data format to backend format
 const convertToBackendFormat = (slotData: CreateSlotData) => ({
