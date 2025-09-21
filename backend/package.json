@@ -5,12 +5,12 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "migrate:make": "knex --knexfile ./src/knexfile.ts migrate:make",
-    "migrate:latest": "knex --knexfile ./src/knexfile.ts migrate:latest",
-    "migrate:rollback": "knex --knexfile ./src/knexfile.ts migrate:rollback"
+    "migrate:make": "ts-node-dev --respawn --transpile-only src/knexfile.ts migrate:make",
+    "migrate:latest": "npx knex --knexfile dist/knexfile.js migrate:latest",
+     "migrate:rollback": "ts-node -r tsconfig-paths/register ./src/knexfile.ts migrate:rollback"
   },
   "repository": {
     "type": "git",
