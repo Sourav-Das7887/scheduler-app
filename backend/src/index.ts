@@ -11,7 +11,6 @@ const app = express();
 // Add CORS middleware
 app.use(cors({
   origin: "https://schedulerfrontend-i7ycaeml8-sourav-das-projects-f786ba5c.vercel.app/", // Your frontend URL
-  methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
 
