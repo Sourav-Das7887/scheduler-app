@@ -22,6 +22,6 @@
     "incremental": true,
     "types": ["node"]
   },
-  "include": ["src", "knexfile.ts"],
+  "include": ["src", "src/knexfile.ts"],
   "exclude": ["node_modules", "dist"]
 }
