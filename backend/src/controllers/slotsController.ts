@@ -18,7 +18,7 @@ export const getSlotsForWeek = async (req: Request, res: Response) => {
     try {
         const start = req.query.start as string | undefined;
         const weekSlots = await slotsService.getSlotsForWeek(start);
-        res.json(weekSlots);
+        res.json({ slots: weekSlots });
     }
     catch (error: any) {
         console.error("Error fetching slots for week:", error);

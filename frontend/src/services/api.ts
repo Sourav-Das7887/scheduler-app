@@ -24,29 +24,29 @@ const convertToFrontendFormat = (backendSlot: any): TimeSlot => ({
 export const api = {
   // Get slots for a week - matches your backend endpoint
   getSlots: async (startDate: string): Promise<TimeSlot[]> => {
-    const response = await fetch(
-      `${API_BASE_URL}?start=${startDate}`
-    );
+    const response = await fetch(`${API_BASE_URL}?start=${startDate}`);
     
     if (!response.ok) {
       throw new Error('Failed to fetch slots');
     }
-    
-    const weekSlots = await response.json();
-    
-    // Flatten the week structure to match frontend expectations
+
+    const responseData = await response.json(); // { slots: [...] }
+    const weekSlots = responseData.slots;
+
     const flattenedSlots: TimeSlot[] = [];
     weekSlots.forEach((day: any) => {
-      day.slots.forEach((slot: any) => {
-        flattenedSlots.push(convertToFrontendFormat({
-          ...slot,
-          date: day.date
-        }));
-      });
+      if (Array.isArray(day.slots)) {
+        day.slots.forEach((slot: any) => {
+          flattenedSlots.push(
+            convertToFrontendFormat({ ...slot, date: day.date })
+          );
+        });
+      }
     });
-    
+
     return flattenedSlots;
   },
+
 
   // Create a slot - matches your backend endpoint
   createSlot: async (slotData: CreateSlotData): Promise<TimeSlot> => {
