@@ -19,7 +19,10 @@ app.use("/slots", slotsRouter);
 
 app.get('/', async (req, res) => {
     const result = await db.raw('SELECT NOW()');
-    res.send(`Database connected: ${result.rows[0].now}`);
+    res.json({
+      status: "Database connected",
+      now: result.rows[0].now
+    });
 });
 
 const PORT = process.env.PORT || 4000;
