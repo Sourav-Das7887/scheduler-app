@@ -10,7 +10,7 @@ const app = express();
 
 // Add CORS middleware
 app.use(cors({
-  origin: ["http://localhost:3000","https://schedulerfrontend-eb2iwiz9u-sourav-das-projects-f786ba5c.vercel.app"], // Your frontend URL
+  origin: "*", // Your frontend URL
   credentials: true
 }));
 
