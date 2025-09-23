@@ -59,70 +59,55 @@ export const getSlotsForWeek = async (startDate?: string) => {
 
 export const updateSlot = async (
   id: number,
-  updates: Partial<SlotInput>,
-  currentWeekStart: string // pass current week's start date from frontend
+  updates: Partial<SlotInput & { date?: string }>, // allow date temporarily for exceptions
+  date?: string
 ) => {
   const slot = await db("slots").where({ id }).first();
   if (!slot) throw new Error("Slot not found");
 
-  // --- Update the recurring slot itself ---
-  const [updatedSlot] = await db("slots")
-    .where({ id })
-    .update(updates)
-    .returning("*");
-
-  // --- Automatically compute the date of this slot in the current week ---
-  if (slot.is_recurring && currentWeekStart) {
-    const slotDate = dayjs(currentWeekStart)
-      .add(slot.day_of_week, "day")
-      .format("YYYY-MM-DD");
-
-    // insert or update exception
-    const existingException = await db("slot_exceptions")
-      .where({ slot_id: id, date: slotDate })
-      .first();
-
-    if (existingException) {
-      await db("slot_exceptions")
-        .where({ slot_id: id, date: slotDate })
-        .update({
-          start_time: updates.start_time ?? slot.start_time,
-          end_time: updates.end_time ?? slot.end_time,
-          type: "edit",
-        });
-    } else {
-      await db("slot_exceptions").insert({
+  // If slot is recurring and a date is provided → create exception
+  if (slot.is_recurring && date) {
+    const [exception] = await db("slot_exceptions")
+      .insert({
         slot_id: id,
-        date: slotDate,
+        date,
+        type: "edit",
         start_time: updates.start_time ?? slot.start_time,
         end_time: updates.end_time ?? slot.end_time,
-        type: "edit",
-      });
-    }
+      })
+      .returning("*");
+    return exception;
   }
+
+  // Otherwise update the slot normally
+  const { date: _ignore, ...updateData } = updates; // remove 'date' if exists
+  const [updatedSlot] = await db("slots")
+    .where({ id })
+    .update(updateData)
+    .returning("*");
 
   return updatedSlot;
 };
 
-
 export const deleteSlot = async (id: number, date?: string) => {
-  const slot = await db('slots').where({ id }).first();
+  const slot = await db("slots").where({ id }).first();
   if (!slot) throw new Error("Slot not found");
 
-  // If recurring slot & date specified, create delete exception
+  // Recurring slot with date → create delete exception
   if (slot.is_recurring && date) {
-    const [exception] = await db('slot_exceptions')
+    const [exception] = await db("slot_exceptions")
       .insert({
         slot_id: id,
         date,
-        type: 'delete',
+        type: "delete",
       })
-      .returning('*');
+      .returning("*");
     return exception;
   }
 
-  // Otherwise delete slot entirely
-  const deleted = await db('slots').where({ id }).del();
+  // Otherwise delete normally
+  const deleted = await db("slots").where({ id }).del();
   if (!deleted) throw new Error("Slot not found");
+
   return { message: "Slot deleted successfully" };
 };
