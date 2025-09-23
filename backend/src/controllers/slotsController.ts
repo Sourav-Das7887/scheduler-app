@@ -30,9 +30,7 @@ export const updateSlot = async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
     const updates: Partial<SlotInput> = req.body;
-
-    // Extract date if sent from frontend
-    const date = req.body.date as string | undefined;
+    const date = req.body.date; // <-- read date from body
 
     const updatedSlot = await slotsService.updateSlot(id, updates, date);
     res.json(updatedSlot);
@@ -40,14 +38,13 @@ export const updateSlot = async (req: Request, res: Response) => {
     console.error("Error updating slot:", error);
     res.status(500).json({ error: error.message });
   }
-}
+};
+
 
 export const deleteSlot = async (req: Request, res: Response) => {
   try {
     const id = Number(req.params.id);
-    
-    // Get date from query params
-    const date = req.query.date as string | undefined;
+    const date = req.query.date as string | undefined; // <-- read date from query
 
     const result = await slotsService.deleteSlot(id, date);
     res.json(result);
@@ -55,4 +52,6 @@ export const deleteSlot = async (req: Request, res: Response) => {
     console.error("Error deleting slot:", error);
     res.status(500).json({ error: error.message });
   }
-}
+};
+
+
