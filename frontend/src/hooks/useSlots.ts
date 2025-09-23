@@ -39,12 +39,15 @@ export const useSlots = () => {
   };
 
   // --- Pass the date to updateSlot for recurring slots ---
-  const updateSlot = async (id: string, updates: UpdateSlotData, slotDate: string) => {
-    const updatedSlot = await api.updateSlot(id, updates, slotDate);
-    setSlots(prev =>
-      prev.map(s => (s.id === id && s.date === slotDate ? updatedSlot : s))
-    );
-  };
+  const updateSlot = async (id: string, updates: UpdateSlotData) => {
+  const updatedSlot = await api.updateSlot(
+    id,
+    updates,
+    currentWeekStart.toISOString().split("T")[0] // send current week's start date
+  );
+  await fetchSlotsForWeek(currentWeekStart); // refresh slots for UI
+};
+
 
   // --- Pass the date to deleteSlot for recurring slots ---
   const deleteSlot = async (id: string, slotDate: string) => {

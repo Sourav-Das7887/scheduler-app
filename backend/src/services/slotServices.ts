@@ -57,31 +57,53 @@ export const getSlotsForWeek = async (startDate?: string) => {
     return weekSlots;
 }
 
-export const updateSlot = async (id: number, updates: Partial<SlotInput>, date?: string) => {
-  const slot = await db('slots').where({ id }).first();
+export const updateSlot = async (
+  id: number,
+  updates: Partial<SlotInput>,
+  currentWeekStart: string // pass current week's start date from frontend
+) => {
+  const slot = await db("slots").where({ id }).first();
   if (!slot) throw new Error("Slot not found");
 
-  // If a specific date is provided, create an exception
-  if (slot.is_recurring && date) {
-    const [exception] = await db('slot_exceptions')
-      .insert({
-        slot_id: id,
-        date,
-        type: 'edit',
-        start_time: updates.start_time ?? slot.start_time,
-        end_time: updates.end_time ?? slot.end_time,
-      })
-      .returning('*');
-    return exception;
-  }
-
-  // Otherwise update the slot directly
-  const [updatedSlot] = await db('slots')
+  // --- Update the recurring slot itself ---
+  const [updatedSlot] = await db("slots")
     .where({ id })
     .update(updates)
-    .returning('*');
+    .returning("*");
+
+  // --- Automatically compute the date of this slot in the current week ---
+  if (slot.is_recurring && currentWeekStart) {
+    const slotDate = dayjs(currentWeekStart)
+      .add(slot.day_of_week, "day")
+      .format("YYYY-MM-DD");
+
+    // insert or update exception
+    const existingException = await db("slot_exceptions")
+      .where({ slot_id: id, date: slotDate })
+      .first();
+
+    if (existingException) {
+      await db("slot_exceptions")
+        .where({ slot_id: id, date: slotDate })
+        .update({
+          start_time: updates.start_time ?? slot.start_time,
+          end_time: updates.end_time ?? slot.end_time,
+          type: "edit",
+        });
+    } else {
+      await db("slot_exceptions").insert({
+        slot_id: id,
+        date: slotDate,
+        start_time: updates.start_time ?? slot.start_time,
+        end_time: updates.end_time ?? slot.end_time,
+        type: "edit",
+      });
+    }
+  }
+
   return updatedSlot;
 };
+
 
 export const deleteSlot = async (id: number, date?: string) => {
   const slot = await db('slots').where({ id }).first();
