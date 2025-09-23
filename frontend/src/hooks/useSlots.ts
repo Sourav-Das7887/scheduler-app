@@ -34,9 +34,10 @@ export const useSlots = () => {
   const loadPreviousWeek = () => setCurrentWeekStart(prev => addWeeks(prev, -1));
 
   const createSlot = async (slotData: CreateSlotData) => {
-    const newSlot = await api.createSlot(slotData);
-    setSlots(prev => [...prev, newSlot]);
-  };
+  await api.createSlot(slotData);
+  await fetchSlotsForWeek(currentWeekStart); // refresh slots for the visible week
+};
+
 
   const updateSlot = async (id: string, updates: UpdateSlotData) => {
     const updatedSlot = await api.updateSlot(id, updates);
