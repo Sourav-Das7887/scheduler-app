@@ -57,24 +57,50 @@ export const getSlotsForWeek = async (startDate?: string) => {
     return weekSlots;
 }
 
-export const updateSlot = async (id: number, updates: Partial<SlotInput>) => {
-    const [updatedSlot] = await db('slots')
-        .where({ id })
-        .update(updates)
-        .returning('*');
+export const updateSlot = async (id: number, updates: Partial<SlotInput>, date?: string) => {
+  const slot = await db('slots').where({ id }).first();
+  if (!slot) throw new Error("Slot not found");
 
-    if(!updatedSlot) {
-        throw new Error("Slot not found");
-    }
-    return updatedSlot;
+  // If a specific date is provided, create an exception
+  if (slot.is_recurring && date) {
+    const [exception] = await db('slot_exceptions')
+      .insert({
+        slot_id: id,
+        date,
+        type: 'edit',
+        start_time: updates.start_time ?? slot.start_time,
+        end_time: updates.end_time ?? slot.end_time,
+      })
+      .returning('*');
+    return exception;
+  }
+
+  // Otherwise update the slot directly
+  const [updatedSlot] = await db('slots')
+    .where({ id })
+    .update(updates)
+    .returning('*');
+  return updatedSlot;
 };
 
-export const deleteSlot = async (id: number) => {
-    const deleted = await db('slots')
-        .where({ id })
-        .del();
-    if(!deleted){
-        throw new Error("Slot not found");
-    }
-    return { message: "Slot deleted successfully" };
-}
+export const deleteSlot = async (id: number, date?: string) => {
+  const slot = await db('slots').where({ id }).first();
+  if (!slot) throw new Error("Slot not found");
+
+  // If recurring slot & date specified, create delete exception
+  if (slot.is_recurring && date) {
+    const [exception] = await db('slot_exceptions')
+      .insert({
+        slot_id: id,
+        date,
+        type: 'delete',
+      })
+      .returning('*');
+    return exception;
+  }
+
+  // Otherwise delete slot entirely
+  const deleted = await db('slots').where({ id }).del();
+  if (!deleted) throw new Error("Slot not found");
+  return { message: "Slot deleted successfully" };
+};
