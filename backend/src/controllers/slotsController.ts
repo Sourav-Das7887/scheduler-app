@@ -27,27 +27,32 @@ export const getSlotsForWeek = async (req: Request, res: Response) => {
 }
 
 export const updateSlot = async (req: Request, res: Response) => {
-    try{
-        const id = Number(req.params.id);
-        const updates: Partial<SlotInput> = req.body;
+  try {
+    const id = Number(req.params.id);
+    const updates: Partial<SlotInput> = req.body;
 
-        const updatedSlot = await slotsService.updateSlot(id, updates);
-        res.json(updatedSlot);
-    }
-    catch (error: any) {
-        console.error("Error updating slot:", error);
-        res.status(500).json({ error: error.message });
-    }
+    // Extract date if sent from frontend
+    const date = req.body.date as string | undefined;
+
+    const updatedSlot = await slotsService.updateSlot(id, updates, date);
+    res.json(updatedSlot);
+  } catch (error: any) {
+    console.error("Error updating slot:", error);
+    res.status(500).json({ error: error.message });
+  }
 }
 
 export const deleteSlot = async (req: Request, res: Response) => {
-    try {
-        const id = Number(req.params.id);
-        const result = await slotsService.deleteSlot(id);
-        res.json(result);
-    }
-    catch (error: any) {
-        console.error("Error deleting slot:", error);
-        res.status(500).json({ error: error.message });
-    }
-};
+  try {
+    const id = Number(req.params.id);
+    
+    // Get date from query params
+    const date = req.query.date as string | undefined;
+
+    const result = await slotsService.deleteSlot(id, date);
+    res.json(result);
+  } catch (error: any) {
+    console.error("Error deleting slot:", error);
+    res.status(500).json({ error: error.message });
+  }
+}

@@ -69,36 +69,40 @@ export const api = {
   },
 
   // Update a slot - matches your backend endpoint
-  updateSlot: async (id: string, updates: UpdateSlotData): Promise<TimeSlot> => {
-    const backendUpdates: any = {};
-    
-    if (updates.startTime) backendUpdates.start_time = `${updates.startTime}:00`;
-    if (updates.endTime) backendUpdates.end_time = `${updates.endTime}:00`;
-    
-    const response = await fetch(`${API_BASE_URL}/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(backendUpdates),
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to update slot');
-    }
-    
-    const updatedSlot = await response.json();
-    return convertToFrontendFormat(updatedSlot);
-  },
+  // Update a slot
+updateSlot: async (id: string, updates: UpdateSlotData, date?: string): Promise<TimeSlot> => {
+  const backendUpdates: any = {};
+  
+  if (updates.startTime) backendUpdates.start_time = `${updates.startTime}:00`;
+  if (updates.endTime) backendUpdates.end_time = `${updates.endTime}:00`;
+  if (date) backendUpdates.date = date; // pass the date for recurring exceptions
 
-  // Delete a slot - matches your backend endpoint
-  deleteSlot: async (id: string): Promise<void> => {
-    const response = await fetch(`${API_BASE_URL}/${id}`, {
-      method: 'DELETE',
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to delete slot');
-    }
-  },
-};
+  const response = await fetch(`${API_BASE_URL}/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(backendUpdates),
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to update slot');
+  }
+
+  const updatedSlot = await response.json();
+  return convertToFrontendFormat(updatedSlot);
+},
+
+// Delete a slot
+deleteSlot: async (id: string, date?: string): Promise<void> => {
+  // Append date as query param if provided
+  const url = date ? `${API_BASE_URL}/${id}?date=${date}` : `${API_BASE_URL}/${id}`;
+
+  const response = await fetch(url, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to delete slot');
+  }
+}}

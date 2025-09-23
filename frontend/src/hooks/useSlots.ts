@@ -17,7 +17,7 @@ export const useSlots = () => {
     try {
       const { start } = getWeekRange(weekStart); // string "YYYY-MM-DD"
       const weekSlots = await api.getSlots(start);
-      setSlots(weekSlots); // ✅ replace old slots for this week
+      setSlots(weekSlots);
       setHasMore(weekSlots.length > 0);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch slots");
@@ -34,19 +34,22 @@ export const useSlots = () => {
   const loadPreviousWeek = () => setCurrentWeekStart(prev => addWeeks(prev, -1));
 
   const createSlot = async (slotData: CreateSlotData) => {
-  await api.createSlot(slotData);
-  await fetchSlotsForWeek(currentWeekStart); // refresh slots for the visible week
-};
-
-
-  const updateSlot = async (id: string, updates: UpdateSlotData) => {
-    const updatedSlot = await api.updateSlot(id, updates);
-    setSlots(prev => prev.map(s => (s.id === id ? updatedSlot : s)));
+    await api.createSlot(slotData);
+    await fetchSlotsForWeek(currentWeekStart); // refresh slots for the visible week
   };
 
-  const deleteSlot = async (id: string) => {
-    await api.deleteSlot(id);
-    setSlots(prev => prev.filter(s => s.id !== id));
+  // --- Pass the date to updateSlot for recurring slots ---
+  const updateSlot = async (id: string, updates: UpdateSlotData, slotDate: string) => {
+    const updatedSlot = await api.updateSlot(id, updates, slotDate);
+    setSlots(prev =>
+      prev.map(s => (s.id === id && s.date === slotDate ? updatedSlot : s))
+    );
+  };
+
+  // --- Pass the date to deleteSlot for recurring slots ---
+  const deleteSlot = async (id: string, slotDate: string) => {
+    await api.deleteSlot(id, slotDate);
+    setSlots(prev => prev.filter(s => !(s.id === id && s.date === slotDate)));
   };
 
   return {
